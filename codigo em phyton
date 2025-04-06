@@ -1,0 +1,106 @@
+"""
+Autor: Fabricio de Sousa Ramires
+Matrícula: 2024013147
+"""
+# Para leitura de arquivos .docx e para PDF's
+import os
+import statistics
+from docx import Document  
+import fitz  
+
+# Caminho do diretório onde o arquivo está
+CAMINHO_ARQUIVO = "documentos"
+NOMES_ARQUIVOS = ["dados.pdf", "dados.docx"]
+
+
+def verificar_arquivo():
+    """
+    Verifica se existe um arquivo chamado 'dados.pdf' ou 'dados.docx'.
+    Retorna o caminho completo do arquivo encontrado.
+    """
+    for nome in NOMES_ARQUIVOS:
+        caminho_completo = os.path.join(CAMINHO_ARQUIVO, nome)
+        if os.path.exists(caminho_completo):
+            return caminho_completo
+    raise FileNotFoundError("Nenhum arquivo 'dados.pdf' ou 'dados.docx' foi encontrado na pasta 'documentos'.")
+
+
+def ler_pdf(caminho):
+    """
+    Lê um arquivo PDF e retorna uma lista com as linhas de texto.
+    """
+    linhas = []
+    with fitz.open(caminho) as doc:
+        for pagina in doc:
+            texto = pagina.get_text()
+            linhas.extend(texto.splitlines())
+    return linhas
+
+
+def ler_docx(caminho):
+    """
+    Lê um arquivo DOCX e retorna uma lista com as linhas de texto.
+    """
+    doc = Document(caminho)
+    return [paragrafo.text for paragrafo in doc.paragraphs if paragrafo.text.strip()]
+
+
+def extrair_numeros(linhas):
+    """
+    Extrai números inteiros ou decimais de uma lista de linhas.
+    """
+    numeros = []
+    for linha in linhas:
+        try:
+            numero = float(linha.strip().replace(',', '.'))  # Troca vírgula por ponto, se necessário
+            numeros.append(numero)
+        except ValueError:
+            # Ignora linhas que não são números
+            continue
+    return numeros
+
+
+def calcular_estatisticas(numeros):
+    """
+    Calcula e imprime.
+    """
+    print("===== Estatísticas =====")
+    print(f"Quantidade de números: {len(numeros)}")
+    print(f"Média: {statistics.mean(numeros):.2f}")
+    print(f"Mediana: {statistics.median(numeros):.2f}")
+    print(f"Somatório: {sum(numeros):.2f}")
+    print(f"Maior valor: {max(numeros):.2f}")
+    print(f"Menor valor: {min(numeros):.2f}")
+
+
+def main():
+    """
+    Função principal que executa o script.
+    """
+    try:
+        caminho = verificar_arquivo()
+        print(f"Arquivo encontrado: {caminho}")
+
+        if caminho.endswith(".pdf"):
+            linhas = ler_pdf(caminho)
+        elif caminho.endswith(".docx"):
+            linhas = ler_docx(caminho)
+        else:
+            raise ValueError("Formato de arquivo não suportado.")
+
+        if not linhas:
+            raise ValueError("O arquivo está vazio.")
+
+        numeros = extrair_numeros(linhas)
+
+        if not numeros:
+            raise ValueError("Nenhum número válido foi encontrado no arquivo.")
+
+        calcular_estatisticas(numeros)
+
+    except Exception as e:
+        print(f"Erro: {e}")
+
+
+if __name__ == "__main__":
+    main()
